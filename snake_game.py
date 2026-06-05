@@ -203,7 +203,7 @@ class Game:
         self.waiting_for_start = True  # 等待用户开始游戏
         
         # 速度控制
-        self.base_speed = 0.100  # 初始速度（原来的0.6倍，更慢）
+        self.base_speed = 0.080  # 初始速度（原来的0.6倍，更慢）
         self.speed_multiplier = 1.0  # 速度倍数
         self.max_speed_multiplier = 2.5  # 最大速度倍数
         self.last_speed_increase = 0  # 上次加速时的分数
@@ -361,25 +361,9 @@ class Game:
         grid.hideturtle()
     
     def start_game(self):
-        """开始游戏，显示3秒倒计时"""
+        """开始游戏（无倒计时，立即开始）"""
         if self.waiting_for_start:
             self.waiting_for_start = False
-            
-            # 3秒倒计时
-            for i in range(3, 0, -1):
-                self.status_pen.clear()
-                self.status_pen.color("#F1C40F")  # 金色
-                self.status_pen.write(f"游戏开始倒计时: {i}", align="center", font=("微软雅黑", 28, "bold"))
-                self.screen.update()
-                time.sleep(1)
-            
-            # 显示"开始！"
-            self.status_pen.clear()
-            self.status_pen.color("#2ECC71")  # 绿色
-            self.status_pen.write("开始！", align="center", font=("微软雅黑", 28, "bold"))
-            self.screen.update()
-            time.sleep(0.3)
-            self.status_pen.clear()
     
     def go_up(self):
         """处理向上移动"""
