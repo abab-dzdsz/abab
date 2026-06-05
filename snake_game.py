@@ -158,8 +158,8 @@ class Food:
         self.generate_new()
     
     def generate_new(self):
-        """生成新的食物位置（随机位置，距离边界至少1格）"""
-        margin = 1  # 边界容错
+        """生成新的食物位置（随机位置，距离边界至少4格）"""
+        margin = 4  # 边界容错
         self.position = (
             random.randint(margin, GRID_WIDTH - 1 - margin),
             random.randint(margin, GRID_HEIGHT - 1 - margin)
@@ -418,12 +418,17 @@ class Game:
             self.snake.grow()
             self.update_score_display()
             
-            # 检查是否达到加速条件（每100分加速0.1倍，上限1500分）
-            if self.score <= 1500:
-                current_hundred = self.score // 100
-                if current_hundred > self.last_speed_increase:
+            # 检查是否达到加速条件（每个颜色分段加0.1倍，上限到300分彩虹模式）
+            color_thresholds = [20, 50, 90, 140, 200, 300]  # 颜色分段阈值
+            if self.score <= 300:
+                # 计算当前处于哪个颜色分段
+                current_segment = 0
+                for threshold in color_thresholds:
+                    if self.score >= threshold:
+                        current_segment += 1
+                if current_segment > self.last_speed_increase:
                     self.speed_multiplier = min(self.speed_multiplier + 0.1, self.max_speed_multiplier)
-                    self.last_speed_increase = current_hundred
+                    self.last_speed_increase = current_segment
             
             # 检查蛇变色条件（隐藏玩法）
             self.update_snake_color()
@@ -439,18 +444,18 @@ class Game:
     
     def update_snake_color(self):
         """根据分数更新蛇的颜色（隐藏玩法）"""
-        # 颜色定义：白(初始) -> 绿(100) -> 蓝(300) -> 紫(600) -> 金(1000) -> 红(1500) -> 彩虹(2000)
+        # 颜色定义：白(初始) -> 绿(20) -> 蓝(50) -> 紫(90) -> 金(140) -> 红(200) -> 彩虹(300)
         colors = {
             0: ("#FFFFFF", "#CCCCCC"),      # 白色
-            100: ("#2ECC71", "#58D68D"),    # 绿色
-            300: ("#3498DB", "#5DADE2"),    # 蓝色
-            600: ("#9B59B6", "#BB8FCE"),    # 紫色
-            1000: ("#F1C40F", "#F4D03F"),   # 金色
-            1500: ("#E74C3C", "#EC7063")    # 红色
+            20: ("#2ECC71", "#58D68D"),     # 绿色
+            50: ("#3498DB", "#5DADE2"),     # 蓝色
+            90: ("#9B59B6", "#BB8FCE"),     # 紫色
+            140: ("#F1C40F", "#F4D03F"),    # 金色
+            200: ("#E74C3C", "#EC7063")     # 红色
         }
         
-        # 检查是否进入彩虹模式（2000分及以上）
-        if self.score >= 2000:
+        # 检查是否进入彩虹模式（300分及以上）
+        if self.score >= 300:
             self.rainbow_mode = True
         else:
             self.rainbow_mode = False
