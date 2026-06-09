@@ -591,6 +591,10 @@ class Game:
         # 设置速度
         self.speed_multiplier = level["speed_multiplier"]
         
+        # 设置时间限制
+        self.time_limit = level.get("time_limit", 0)
+        self.time_left = self.time_limit
+        
         # 等待用户按键开始
         self.waiting_for_start = True
         self.show_game_ui()
@@ -616,6 +620,8 @@ class Game:
         self.last_speed_increase = 0
         self.rainbow_mode = False
         self.current_obstacles = []  # 重置当前障碍物列表
+        self.time_left = 0  # 剩余时间（秒）
+        self.start_time = 0  # 游戏开始时间
         
         # 保存当前地图大小
         self.current_grid_width = grid_width
@@ -801,6 +807,8 @@ class Game:
         """开始游戏（带按键反馈）"""
         if self.waiting_for_start:
             self.waiting_for_start = False
+            # 记录游戏开始时间（用于倒计时）
+            self.start_time = time.time()
             # 显示按键反馈
             self.show_start_feedback()
     
@@ -959,6 +967,17 @@ class Game:
     def update(self):
         """更新游戏状态"""
         if not self.game_over and not self.paused and not self.waiting_for_start and not self.level_complete:
+            # 处理倒计时（限时挑战关卡）
+            if self.game_mode == "level" and self.time_limit > 0:
+                elapsed = time.time() - self.start_time
+                self.time_left = max(0, self.time_limit - int(elapsed))
+                
+                # 检查时间是否耗尽
+                if self.time_left <= 0:
+                    self.game_over = True
+                    self.show_fail_reason("时间耗尽 - 游戏失败！")
+                    return
+            
             if self.snake.check_wall_collision():
                 self.game_over = True
                 self.show_fail_reason("头部碰墙 - 游戏失败！")
@@ -974,6 +993,19 @@ class Game:
         if self.snake and self.food:
             if not self.waiting_for_start:
                 self.status_pen.clear()
+                # 显示关卡信息（包含倒计时）
+                if self.game_mode == "level":
+                    level = self.levels[self.current_level]
+                    status_text = f"{level['name']} | 目标: {level['target_score']}分"
+                    # 如果有限时，显示倒计时
+                    if self.time_limit > 0:
+                        # 时间少于10秒时用红色显示
+                        time_color = "#E74C3C" if self.time_left <= 10 else "#FFFFFF"
+                        self.status_pen.color(time_color)
+                        status_text += f" | ⏱️ {self.time_left}秒"
+                    else:
+                        self.status_pen.color("#FFFFFF")
+                    self.status_pen.write(status_text, align="center", font=("微软雅黑", 16, "bold"))
             
             self.snake.draw()
             self.food.draw()
